@@ -68,6 +68,32 @@ class LibraryManagerTest {
     libraryManager.borrowBook("book1", "user1");
     assertTrue(libraryManager.returnBook("book1", "user1"));
     assertEquals(1, libraryManager.getAvailableCopies("book1"));
+    verify(notificationService).notifyUser(eq("user1"), contains("You have returned the book: book1"));
+  }
+
+  @Test
+  void testReturnBookByNotActiveUser() {
+    when(userService.isUserActive("user1")).thenReturn(false);
+    libraryManager.addBook("book1", 1);
+    libraryManager.borrowBook("book1", "user1");
+    assertFalse(libraryManager.returnBook("book1", "user1"));
+    verify(notificationService, never()).notifyUser(eq("user1"), contains("You have returned the book: book1"));
+  }
+
+  @Test
+  public void testReturnBook_BookNotBorrowedByUser() {
+    libraryManager.borrowBook("book1", "user1");
+    assertFalse(libraryManager.returnBook("book1", "user2"));
+    assertEquals(0, libraryManager.getAvailableCopies("book1"));
+    verify(notificationService, never()).notifyUser(eq("user2"), contains("You have returned the book: book1")); //проверка что оповещение не придет ни тому ни другому
+    verify(notificationService, never()).notifyUser(eq("user1"), contains("You have returned the book: book1"));
+  }
+
+  @Test
+  void testReturnBookNotBorrowedAtAll() {
+    libraryManager.addBook("book1", 1);
+    assertFalse(libraryManager.returnBook("book1", "user2"));
+    verify(notificationService, never()).notifyUser(anyString(), anyString());
   }
 
   @Test
