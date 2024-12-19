@@ -81,7 +81,10 @@ class LibraryManagerTest {
   }
 
   @Test
-  public void testReturnBook_BookNotBorrowedByUser() {
+  void testReturnBook_BookNotBorrowedByUser() {
+    when(userService.isUserActive("user1")).thenReturn(true);
+    when(userService.isUserActive("user2")).thenReturn(true);
+    libraryManager.addBook("book1", 1);
     libraryManager.borrowBook("book1", "user1");
     assertFalse(libraryManager.returnBook("book1", "user2"));
     assertEquals(0, libraryManager.getAvailableCopies("book1"));
